@@ -50,7 +50,7 @@ Total police-recorded crime is not comparable across countries (offenses are def
 - **Descriptive only.** With 29 country-level observations, the analysis shows where and how large the gap is, not what causes it.
 - **Leverage of the U.S. point.** The correlation with Gini across all 29 countries (about 0.5) is driven largely by the single U.S. observation. It falls to about 0.3 when only European countries are used.
 - **Uneven data coverage.** Some countries have fewer than five years of homicide data in the window: Germany (2018-2020) and Portugal (3 years), and Belgium, Croatia, Romania, and the UK (4 years). Averages use the years available.
-- **Hungary's Gini** has no observation in 2018-2022, so its most recent value (2017) is used. It is marked with a triangle in Figure 4.
+- **Hungary's Gini** has no observation in 2018-2022, so its most recent value (2017) is used. It is marked with a triangle in chart 4.
 - **Small countries** (e.g., Malta, Luxembourg, Cyprus) have volatile rates because of small counts.
 - **Different sources.** Country data (WHO) and state data (CDC) are both death-certificate based but are not identical. At the national level they agree closely (6.85 vs. 6.9).
 - **D.C.** is a city, not a state, and is a clear outlier. It is kept in the state comparison and labeled.
@@ -60,18 +60,29 @@ Total police-recorded crime is not comparable across countries (offenses are def
 
 | File | Description |
 |------|-------------|
+| `crime_comparison.R` | Single R script: data wrangling (downloads and merges the data, exports the CSVs) and analysis (builds and saves the four charts) |
+| `Blog Post 4.Rproj` | RStudio project file; opening it sets the working directory to the project folder |
+| `Data/Underlying Cause of Death, 2018-2024, Single Race.tsv` | Raw CDC WONDER export (manual download) |
 | `Results/country_avg.csv` | One row per country, 2018-2022 averages (homicide rate, GDP per capita, Gini, population) |
 | `Results/panel.csv` | Country-year data, 2000-2023 |
 | `Results/europe_benchmark.csv` | Population-weighted Europe homicide rate by year, 2000-2020 |
 | `Results/cdc_states.csv` | Homicide rate by state, 2018-2022 pooled |
-| `Underlying_Cause_of_Death__2018-2024__Single_Race.tsv` | Raw CDC WONDER export |
-| `[data preparation script].R` | Downloads and merges the WHO and World Bank data and creates the CSV files |
-| `[charts script].R` | Builds and saves the four charts |
+| `Results/chart1_bar.png` to `Results/chart4_scatter.png` | The four charts (see "Visualizations") |
 
 ## Reproducing the analysis
 
-1. Run the data preparation script. It pulls the WHO data from Our World in Data and the World Bank indicators through the `WDI` package, then writes `country_avg.csv`, `panel.csv`, and `europe_benchmark.csv`. These sources are updated over time, so results may differ slightly from those reported here (data accessed October 2026).
-2. Load the CDC export (the raw `.tsv` is included), keep the first 51 data rows (the states), and save `cdc_states.csv`. CDC's official API only returns national totals, so state-level data must be exported from the CDC WONDER web interface using the settings listed under "Data sources."
-3. Run the charts script to produce the four PNG files.
+1. Open `Blog Post 4.Rproj` in RStudio. This sets the working directory to the project folder, so no file paths need to be edited.
+2. Check that the CDC export is in the `Data/` folder under the name shown above.
+3. Open `crime_comparison.R` and run it from top to bottom. An internet connection is required. The script:
+   - installs any missing R packages;
+   - downloads the WHO homicide data from Our World in Data and the World Bank indicators through the `WDI` package;
+   - merges them into the country-year panel, the Europe benchmark, and the 2018-2022 country averages (including the Hungary Gini fallback);
+   - reads the CDC state file (the first 51 rows, which are the states and D.C.);
+   - saves the CSV tables and the four charts to the `Results/` folder, which it creates if it doesn't exist.
+4. WHO and World Bank data are updated over time, so results may differ slightly from those reported here (data accessed October 2026).
 
-**R packages:** `dplyr`, `WDI`, `ggplot2`, `ggrepel`, `patchwork`, `scales`.
+If you don't use RStudio, set the working directory to the project folder first with `setwd("path/to/project/folder")`, then run the script.
+
+CDC's official API only returns national totals, so the state-level file cannot be pulled by script. It must be exported from the CDC WONDER web interface using the settings listed under "Data sources."
+
+**R packages:** `WDI`, `dplyr`, `ggplot2`, `ggrepel`, `patchwork`, `scales`.

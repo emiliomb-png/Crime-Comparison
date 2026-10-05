@@ -1,14 +1,28 @@
-install.packages("WDI")
-install.packages("ggrepel")
+# U.S. vs. Europe homicide rates
+# ______________________________
+# HOW TO RUN: open the project's .Rproj file in RStudio (this sets the working
+# directory to the project folder), then run this script from top to bottom.
+#
+# Required folder layout:
+#   Data/Underlying Cause of Death, 2018-2024, Single Race.tsv   (CDC WONDER export)
+#   Results/                                                     (created by this script)
+#
+# Requires an internet connection (WHO and World Bank data are downloaded).
 
-library(jsonlite)
+# SETUP
+
+pkgs    <- c("WDI", "dplyr", "ggplot2", "ggrepel", "patchwork", "scales")
+missing <- pkgs[!pkgs %in% rownames(installed.packages())]
+if (length(missing) > 0) install.packages(missing)
+
 library(WDI)
-library(readr)
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
 library(patchwork)
 library(scales)
+
+dir.create("Results", showWarnings = FALSE)
 
 # DATA WRANGLING
 # ______________
@@ -69,8 +83,7 @@ country_avg <- panel |>
     .groups = "drop"
   )
 
-# 7. Gini fallback 
-
+# 7. Gini fallback (countries with no Gini in the window use their latest earlier value)
 gini_fallback <- wb |>
   filter(year >= 2015, year <= 2022, !is.na(gini)) |>
   group_by(iso3c) |>
@@ -87,19 +100,17 @@ country_avg <- country_avg |>
 
 country_avg |> filter(iso3c == "HUN") |> select(country, gini, gini_fallback_year)
 
-dir.create("Results", showWarnings = FALSE)
+# 8. CDC: homicide by U.S. state
+# Manual export from CDC WONDER, saved in the Data folder (the CDC API only returns national data)
+cdc_file <- file.path("Data", "Underlying Cause of Death, 2018-2024, Single Race.tsv")
 
-write.csv(country_avg,      file.path("Results", "country_avg.csv"),      row.names = FALSE)
-write.csv(panel,            file.path("Results", "panel.csv"),            row.names = FALSE)
-write.csv(europe_benchmark, file.path("Results", "europe_benchmark.csv"), row.names = FALSE)
-write.csv(cdc_states,       file.path("Results", "cdc_states.csv"),       row.names = FALSE)
+if (!file.exists(cdc_file)) {
+  stop("CDC file not found: ", cdc_file, "\n",
+       "Put the CDC WONDER export in the 'Data' folder of the project.\n",
+       "R is currently looking in: ", getwd())
+}
 
-
-
-## CDC (homicide by U.S. state)
-
-cdc <- read.delim("~/Documents/AEDS 6400/Blog Post 4/Underlying Cause of Death, 2018-2024, Single Race.tsv",
-                  nrows = 51, quote = "\"")
+cdc <- read.delim(cdc_file, nrows = 51, quote = "\"")
 
 cdc_states <- cdc |>
   transmute(state = State,
@@ -109,7 +120,11 @@ cdc_states <- cdc |>
 
 cdc_states |> arrange(homicide_rate) |> slice(c(1:3, 49:51))
 
-write.csv(cdc_states, "cdc_states.csv", row.names = FALSE)
+# 9. Save the tables
+write.csv(country_avg,      file.path("Results", "country_avg.csv"),      row.names = FALSE)
+write.csv(panel,            file.path("Results", "panel.csv"),            row.names = FALSE)
+write.csv(europe_benchmark, file.path("Results", "europe_benchmark.csv"), row.names = FALSE)
+write.csv(cdc_states,       file.path("Results", "cdc_states.csv"),       row.names = FALSE)
 
 # DATA ANALYSIS
 # _____________
@@ -246,6 +261,7 @@ p4 <- (p4a | p4b) +
     caption  = "Triangle = Hungary (Gini from 2017). Sources: WHO, World Bank."
   )
 
+# ---- Save charts ----
 ggsave(file.path("Results", "chart1_bar.png"),     p1, width = 8,  height = 7, dpi = 300)
 ggsave(file.path("Results", "chart2_line.png"),    p2, width = 8,  height = 5, dpi = 300)
 ggsave(file.path("Results", "chart3_states.png"),  p3, width = 7,  height = 6, dpi = 300)
