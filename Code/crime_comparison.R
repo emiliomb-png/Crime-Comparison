@@ -87,9 +87,14 @@ country_avg <- country_avg |>
 
 country_avg |> filter(iso3c == "HUN") |> select(country, gini, gini_fallback_year)
 
-write.csv(country_avg,       "country_avg.csv",       row.names = FALSE)
-write.csv(panel,             "panel.csv",             row.names = FALSE)
-write.csv(europe_benchmark,  "europe_benchmark.csv",  row.names = FALSE)
+dir.create("Results", showWarnings = FALSE)
+
+write.csv(country_avg,      file.path("Results", "country_avg.csv"),      row.names = FALSE)
+write.csv(panel,            file.path("Results", "panel.csv"),            row.names = FALSE)
+write.csv(europe_benchmark, file.path("Results", "europe_benchmark.csv"), row.names = FALSE)
+write.csv(cdc_states,       file.path("Results", "cdc_states.csv"),       row.names = FALSE)
+
+
 
 ## CDC (homicide by U.S. state)
 
@@ -241,7 +246,7 @@ p4 <- (p4a | p4b) +
     caption  = "Triangle = Hungary (Gini from 2017). Sources: WHO, World Bank."
   )
 
-ggsave("chart1_bar.png",     p1, width = 8,  height = 7, dpi = 300)
-ggsave("chart2_line.png",    p2, width = 8,  height = 5, dpi = 300)
-ggsave("chart3_states.png",  p3, width = 7,  height = 6, dpi = 300)
-ggsave("chart4_scatter.png", p4, width = 11, height = 5, dpi = 300)
+ggsave(file.path("Results", "chart1_bar.png"),     p1, width = 8,  height = 7, dpi = 300)
+ggsave(file.path("Results", "chart2_line.png"),    p2, width = 8,  height = 5, dpi = 300)
+ggsave(file.path("Results", "chart3_states.png"),  p3, width = 7,  height = 6, dpi = 300)
+ggsave(file.path("Results", "chart4_scatter.png"), p4, width = 11, height = 5, dpi = 300)
